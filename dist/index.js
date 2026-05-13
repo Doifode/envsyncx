@@ -1,0 +1,25 @@
+#!/usr/bin/env node
+import { Command } from "commander";
+import { saveCommand } from "./commands/save.js";
+import { switchCommand } from "./commands/switch.js";
+import { doctorCommand } from "./commands/doctor.js";
+import { syncCommand } from "./commands/sync.js";
+const program = new Command();
+program
+    .name("envsyncx")
+    .description("Environment profile manager")
+    .version("0.0.1");
+program
+    .command("save")
+    .argument("<profile>", "profile name")
+    .action(saveCommand);
+program
+    .command("switch")
+    .argument("<profile>", "profile name")
+    .action(switchCommand);
+program.command("doctor").action(doctorCommand);
+program
+    .command("sync")
+    .argument("<profile>", "profile name")
+    .action(syncCommand);
+program.parse();
