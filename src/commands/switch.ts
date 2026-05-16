@@ -1,29 +1,22 @@
 import chalk from "chalk";
 import fs from "fs";
 
-import {
-  writeEnvFile,
-} from "../utils/env.js";
+import { writeEnvFile } from "../utils/env.js";
 
-import { getProjectName } from "../utils/project.js";
+import { getProjectName, getProjectUniquePath } from "../utils/project.js";
 
-import {
-  loadProfile,
-} from "../utils/storage.js";
+import { loadProfile } from "../utils/storage.js";
 
 export async function switchCommand(profile: string) {
   try {
     const project = getProjectName();
 
-    const env = await loadProfile(
-      project,
-      profile
-    );
+    const fullPathOfProject = getProjectUniquePath();
+
+    const env = await loadProfile(project, profile, fullPathOfProject);
 
     if (!env || Object.keys(env).length === 0) {
-      console.log(
-        chalk.red("❌ Profile is empty")
-      );
+      console.log(chalk.red("❌ Profile is empty"));
 
       return;
     }
@@ -33,15 +26,9 @@ export async function switchCommand(profile: string) {
 
     // verify file exists
     if (fs.existsSync(".env")) {
-      console.log(
-        chalk.green(
-          `✔ Restored .env from profile '${profile}'`
-        )
-      );
+      console.log(chalk.green(`✔ Restored .env from profile '${profile}'`));
     } else {
-      console.log(
-        chalk.red("❌ Failed to create .env")
-      );
+      console.log(chalk.red("❌ Failed to create .env"));
     }
   } catch (error: any) {
     console.log(chalk.red(error.message));

@@ -5,13 +5,16 @@ import { saveCommand } from "./commands/save.js";
 import { switchCommand } from "./commands/switch.js";
 import { doctorCommand } from "./commands/doctor.js";
 import { syncCommand } from "./commands/sync.js";
+import { initCommand } from "./commands/init.js";
 
 const program = new Command();
 
 program
-  .name("envsyncx")
+  .name("esync")
   .description("Environment profile manager")
   .version("0.0.1");
+
+program.command("init").action(initCommand);
 
 program
   .command("save")

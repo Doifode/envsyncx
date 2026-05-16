@@ -1,22 +1,23 @@
 import fs from "fs-extra";
 import path from "path";
-import os from "os";
 
-const BASE_DIR = path.join(os.homedir(), ".envsyncx");
+const BASE_DIR = path.join(".envsyncx");
 
 export function getProfilePath(
   project: string,
-  profile: string
+  profile: string,
+  uniquePath: string,
 ) {
-  return path.join(BASE_DIR, project, `${profile}.json`);
+  return path.join(BASE_DIR, uniquePath, project, `${profile}.json`);
 }
 
 export async function saveProfile(
   project: string,
   profile: string,
-  data: Record<string, string>
+  data: Record<string, string>,
+  uniquePath: string,
 ) {
-  const filePath = getProfilePath(project, profile);
+  const filePath = getProfilePath(project, profile, uniquePath);
 
   await fs.ensureDir(path.dirname(filePath));
 
@@ -27,9 +28,10 @@ export async function saveProfile(
 
 export async function loadProfile(
   project: string,
-  profile: string
+  profile: string,
+  uniquePath: string,
 ) {
-  const filePath = getProfilePath(project, profile);
+  const filePath = getProfilePath(project, profile, uniquePath);
 
   if (!(await fs.pathExists(filePath))) {
     throw new Error(`Profile '${profile}' not found`);
@@ -37,3 +39,11 @@ export async function loadProfile(
 
   return fs.readJson(filePath);
 }
+
+export const checkFileExistsInProject = (filename: string): boolean => {
+  return fs.existsSync(filename);
+};
+
+export const isProjectInitialized = (uniquePath: string): boolean => {
+  return fs.existsSync(path.join(BASE_DIR, uniquePath));
+};

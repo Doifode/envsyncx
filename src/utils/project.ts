@@ -14,3 +14,7 @@ export function getProjectName(): string {
 
   return packageJson.name || "unknown-project";
 }
+
+export function getProjectUniquePath(): string {
+  return process.cwd().replace(/[\/\\:]/g, "_");
+}

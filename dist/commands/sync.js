@@ -1,13 +1,18 @@
 import chalk from "chalk";
 import inquirer from "inquirer";
 import { readEnvFile } from "../utils/env.js";
-import { getProjectName } from "../utils/project.js";
-import { loadProfile, saveProfile, } from "../utils/storage.js";
+import { getProjectName, getProjectUniquePath } from "../utils/project.js";
+import { loadProfile, saveProfile } from "../utils/storage.js";
 export async function syncCommand(profile) {
     try {
+        // get project name and unique path for profile storage
+        // get source of truth file name from .envsyncx/profiles/{projectName}_{fullPathOfProject}.json to ensure we are checking against the correct file, in case user has multiple projects with different source of truth files
         const project = getProjectName();
-        const example = readEnvFile(".env.example");
-        const savedProfile = await loadProfile(project, profile);
+        const fullPathOfProject = getProjectUniquePath();
+        const readJson = await loadProfile(project, "config", fullPathOfProject);
+        const sourceOfTruthFileName = readJson.sourceOfTruth;
+        const example = readEnvFile(sourceOfTruthFileName);
+        const savedProfile = await loadProfile(project, profile, fullPathOfProject);
         let updated = false;
         for (const key of Object.keys(example)) {
             if (!(key in savedProfile)) {
@@ -24,7 +29,7 @@ export async function syncCommand(profile) {
             }
         }
         if (updated) {
-            await saveProfile(project, profile, savedProfile);
+            await saveProfile(project, profile, savedProfile, fullPathOfProject);
             console.log(chalk.green("\n✔ Profile synced successfully"));
         }
         else {

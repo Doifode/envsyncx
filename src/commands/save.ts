@@ -2,17 +2,31 @@ import fs from "fs";
 import chalk from "chalk";
 import inquirer from "inquirer";
 
-import {
-  readEnvFile,
-  writeEnvFile,
-} from "../utils/env.js";
+import { readEnvFile, writeEnvFile } from "../utils/env.js";
 
-import { getProjectName } from "../utils/project.js";
+import { getProjectName, getProjectUniquePath } from "../utils/project.js";
 
-import { saveProfile } from "../utils/storage.js";
+import { isProjectInitialized, saveProfile } from "../utils/storage.js";
 
 export async function saveCommand(profile: string) {
   try {
+    const isInitialized = isProjectInitialized(getProjectUniquePath());
+    if (!isInitialized) {
+      console.log(chalk.red("❌ Project not initialized"));
+      return;
+    }
+
+    // read json file from .envsyncx/profiles/{projectName}_{fullPathOfProject}.json if exists, otherwise read from .env or .env.example and create the file
+
+    const fullPathOfProject = getProjectUniquePath();
+    const project = getProjectName();
+    const readJson = fs.readFileSync(
+      `.envsyncx/${fullPathOfProject}/${project}/config.json`,
+      "utf-8",
+    );
+
+    const config = JSON.parse(readJson);
+    const sourceOfTruthFileName = config.sourceOfTruth;
     let env: Record<string, string> = {};
 
     // CASE 1 -> .env exists
@@ -21,14 +35,12 @@ export async function saveCommand(profile: string) {
     }
 
     // CASE 2 -> .env missing but .env.example exists
-    else if (fs.existsSync(".env.example")) {
+    else if (fs.existsSync(sourceOfTruthFileName)) {
       console.log(
-        chalk.yellow(
-          ".env not found. Creating from .env.example...\n"
-        )
+        chalk.yellow(".env not found. Creating from .env.example...\n"),
       );
 
-      const example = readEnvFile(".env.example");
+      const example = readEnvFile(sourceOfTruthFileName);
 
       for (const key of Object.keys(example)) {
         const answer = await inquirer.prompt([
@@ -45,29 +57,19 @@ export async function saveCommand(profile: string) {
       // create .env automatically
       writeEnvFile(".env", env);
 
-      console.log(
-        chalk.green("✔ .env created successfully\n")
-      );
+      console.log(chalk.green("✔ .env created successfully\n"));
     }
 
     // CASE 3 -> nothing exists
     else {
-      console.log(
-        chalk.red(
-          "❌ No .env or .env.example file found"
-        )
-      );
+      console.log(chalk.red("❌ No .env or .env.example file found"));
 
       return;
     }
 
-    const project = getProjectName();
+    await saveProfile(project, profile, env, fullPathOfProject);
 
-    await saveProfile(project, profile, env);
-
-    console.log(
-      chalk.green(`✔ Saved profile '${profile}'`)
-    );
+    console.log(chalk.green(`✔ Saved profile '${profile}'`));
   } catch (error: any) {
     console.log(chalk.red(error.message));
   }

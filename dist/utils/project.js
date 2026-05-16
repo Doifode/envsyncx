@@ -8,3 +8,6 @@ export function getProjectName() {
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"));
     return packageJson.name || "unknown-project";
 }
+export function getProjectUniquePath() {
+    return process.cwd().replace(/[\/\\:]/g, "_");
+}

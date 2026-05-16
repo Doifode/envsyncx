@@ -1,12 +1,13 @@
 import chalk from "chalk";
 import fs from "fs";
-import { writeEnvFile, } from "../utils/env.js";
-import { getProjectName } from "../utils/project.js";
-import { loadProfile, } from "../utils/storage.js";
+import { writeEnvFile } from "../utils/env.js";
+import { getProjectName, getProjectUniquePath } from "../utils/project.js";
+import { loadProfile } from "../utils/storage.js";
 export async function switchCommand(profile) {
     try {
         const project = getProjectName();
-        const env = await loadProfile(project, profile);
+        const fullPathOfProject = getProjectUniquePath();
+        const env = await loadProfile(project, profile, fullPathOfProject);
         if (!env || Object.keys(env).length === 0) {
             console.log(chalk.red("❌ Profile is empty"));
             return;
