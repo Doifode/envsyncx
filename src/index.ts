@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 
 import { Command } from "commander";
+import descCommand from "./commands/desc.js";
+import { doctorCommand } from "./commands/doctor.js";
+import { initCommand } from "./commands/init.js";
+import listProfilesCommand from "./commands/list-profiles.js";
 import { saveCommand } from "./commands/save.js";
 import { switchCommand } from "./commands/switch.js";
-import { doctorCommand } from "./commands/doctor.js";
 import { syncCommand } from "./commands/sync.js";
-import { initCommand } from "./commands/init.js";
 
 const program = new Command();
 
@@ -32,5 +34,9 @@ program
   .command("sync")
   .argument("<profile>", "profile name")
   .action(syncCommand);
+
+program.command("list").action(listProfilesCommand);
+
+program.command("desc").action(descCommand);
 
 program.parse();

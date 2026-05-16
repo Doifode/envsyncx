@@ -1,10 +1,13 @@
 import chalk from "chalk";
 import { readEnvFile } from "../utils/env.js";
+import { readFilesFromProject } from "../utils/storage.js";
 
 export async function doctorCommand() {
   try {
+    const configData = readFilesFromProject("config.json");
+    const sourceOfTruthFileName = configData.sourceOfTruth;
     const env = readEnvFile(".env");
-    const example = readEnvFile(".env.example");
+    const example = readEnvFile(sourceOfTruthFileName);
 
     const missing: string[] = [];
 

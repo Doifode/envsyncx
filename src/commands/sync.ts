@@ -3,7 +3,12 @@ import inquirer from "inquirer";
 
 import { readEnvFile } from "../utils/env.js";
 import { getProjectName, getProjectUniquePath } from "../utils/project.js";
-import { loadProfile, saveProfile } from "../utils/storage.js";
+import {
+  loadProfile,
+  saveProfile,
+  updateProjectFiles,
+} from "../utils/storage.js";
+import { env } from "node:process";
 
 export async function syncCommand(profile: string) {
   try {
@@ -38,7 +43,15 @@ export async function syncCommand(profile: string) {
     }
 
     if (updated) {
-      await saveProfile(project, profile, savedProfile, fullPathOfProject);
+      await updateProjectFiles(
+        project,
+        fullPathOfProject,
+        `${profile}.json`,
+        (configData) => ({
+          ...configData,
+          ...savedProfile,
+        }),
+      );
 
       console.log(chalk.green("\n✔ Profile synced successfully"));
     } else {

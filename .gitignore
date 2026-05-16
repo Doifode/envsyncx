@@ -37,6 +37,7 @@ yarn-error.log*
 dist/*
 dist-ssr/*
 dist*
+dist
 
 # vercel
 .vercel

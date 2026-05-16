@@ -1,7 +1,11 @@
 import { execSync } from "child_process";
 import inquirer from "inquirer";
 import { getProjectName, getProjectUniquePath } from "../utils/project.js";
-import { checkFileExistsInProject, saveProfile } from "../utils/storage.js";
+import {
+  checkFileExistsInProject,
+  createConfigFile,
+  saveProfile,
+} from "../utils/storage.js";
 
 const configureEnvsyncx = async () => {
   const value = await inquirer.prompt([
@@ -57,19 +61,13 @@ const configureEnvsyncx = async () => {
     const profileData = {
       sourceOfTruth: sourceOfTruthFileName.filename,
       project: projectNamePrompt.project,
-      profile: profileNamePrompt.profile,
       fullPath: fullPathOfProject,
     };
 
-    await saveProfile(
-      profileData.project,
-      "config",
-      profileData,
-      fullPathOfProject,
-    );
+    await createConfigFile(profileData.project, fullPathOfProject, profileData);
     // run save command to create the first profile with the data from .env file, and if .env file doesn't exist, then use .env.example file, and if neither exists, then prompt user to enter values for the keys in .env.example file
     // how to run save command programmatically without calling the command in terminal? we can directly call the function that handles the save command and pass the necessary arguments to it, instead of executing it as a separate process. this way we can reuse the logic in the save command without duplicating code or relying on terminal commands. we just need to make sure to import the function from the save command file and call it with the appropriate parameters, such as the profile name and project name, along with any other required data.
-    execSync(`esync save ${profileData.profile}`, { stdio: "inherit" });
+    execSync(`esync save ${[profileNamePrompt.profile]}`, { stdio: "inherit" });
 
     console.log(
       "Initialization complete! Your first profile has been created.",
