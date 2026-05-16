@@ -4,7 +4,6 @@ import { getProjectName, getProjectUniquePath } from "../utils/project.js";
 import {
   checkFileExistsInProject,
   createConfigFile,
-  saveProfile,
 } from "../utils/storage.js";
 
 const configureEnvsyncx = async () => {

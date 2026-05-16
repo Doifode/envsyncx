@@ -13,7 +13,9 @@ export function getProfilePath(
   return path.join(BASE_DIR, uniquePath, project, `${profile}.json`);
 }
 
-export const readFilesFromProject = (jsonfile: string): Record<string, any> => {
+export const readFilesFromProject = (
+  jsonfile: string,
+): Record<string, any> | null => {
   const uniquePath = getProjectUniquePath();
   const project = getProjectName();
 
@@ -24,6 +26,7 @@ export const readFilesFromProject = (jsonfile: string): Record<string, any> => {
         `Configuration file not found please run 'envsyncx init' command to initialize the project`,
       ),
     );
+    return null;
   }
 
   const configPath = path.join(BASE_DIR, uniquePath, project, jsonfile);
@@ -41,7 +44,7 @@ export const updateProjectFiles = async (
   project: string,
   uniquePath: string,
   fileName: string,
-  callback: (data: Record<string, any>) => void,
+  callback: (data: Record<string, any>) => Record<string, any> | null,
 ) => {
   const configPath = path.join(BASE_DIR, uniquePath, project, fileName);
   const newValues = callback ? callback(await fs.readJson(configPath)) : {};
@@ -64,9 +67,17 @@ export async function saveProfile(
 ) {
   const filePath = getProfilePath(project, profile, uniquePath);
 
-  updateProjectFiles(project, uniquePath, "config.json", (configData) => ({
-    profiles: [...(configData.profiles || []), profile],
-  }));
+  await updateProjectFiles(
+    project,
+    uniquePath,
+    "config.json",
+    (configData) => ({
+      profiles: [
+        ...(configData.profiles || []).filter((p: string) => p !== profile),
+        profile,
+      ],
+    }),
+  );
 
   await fs.ensureDir(path.dirname(filePath));
 
@@ -106,3 +117,15 @@ export const checkFileExistsInProject = (filename: string): boolean => {
 export const isProjectInitialized = (uniquePath: string): boolean => {
   return fs.existsSync(path.join(BASE_DIR, uniquePath));
 };
+
+export function deleteFileFromProject(fileName: string) {
+  const checkFileExists = checkFileExistsInProject(fileName);
+
+  if (!checkFileExists) {
+    console.log(chalk.red(`File '${fileName}' not found in the project.`));
+    return;
+  }
+
+  fs.removeSync(fileName);
+  console.log(chalk.green(`File '${fileName}' has been deleted successfully.`));
+}

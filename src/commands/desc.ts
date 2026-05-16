@@ -5,6 +5,10 @@ import { readFilesFromProject } from "../utils/storage.js";
 const printProfileValues = (profile: string) => {
   try {
     const profileData = readFilesFromProject(`${profile}.json`);
+    if(!profileData) {
+      console.log(chalk.red(`Profile '${profile}' not found.`));
+      return;
+    }
     console.log(chalk.green(`\nProfile: ${profile}\n`));
     for (const [key, value] of Object.entries(profileData)) {
       console.log(chalk.blue(`${key}: ${value}`));
@@ -17,6 +21,10 @@ const printProfileValues = (profile: string) => {
 export default async function descCommand() {
   try {
     const configData = readFilesFromProject("config.json");
+    if(!configData) {
+      console.log(chalk.red(`Configuration file not found.`));
+      return;
+    }
 
     if (configData.profiles.length === 0) {
       console.log(chalk.yellow("No profiles found."));

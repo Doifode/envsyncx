@@ -9,6 +9,7 @@ import {
   updateProjectFiles,
 } from "../utils/storage.js";
 import { env } from "node:process";
+import { execSync } from "child_process";
 
 export async function syncCommand(profile: string) {
   try {
@@ -42,6 +43,15 @@ export async function syncCommand(profile: string) {
       }
     }
 
+    // remove keys no longer in source-of-truth
+    for (const key of Object.keys(savedProfile)) {
+      if (!(key in example)) {
+        console.log(chalk.yellow(`\nRemoving stale key: ${key}`));
+        delete savedProfile[key];
+        updated = true;
+      }
+    }
+
     if (updated) {
       await updateProjectFiles(
         project,
@@ -52,6 +62,8 @@ export async function syncCommand(profile: string) {
           ...savedProfile,
         }),
       );
+
+      execSync(`envsyncx switch ${profile}`, { stdio: "inherit" });
 
       console.log(chalk.green("\n✔ Profile synced successfully"));
     } else {

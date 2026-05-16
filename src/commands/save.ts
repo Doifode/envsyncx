@@ -6,7 +6,11 @@ import { readEnvFile, writeEnvFile } from "../utils/env.js";
 
 import { getProjectName, getProjectUniquePath } from "../utils/project.js";
 
-import { isProjectInitialized, saveProfile } from "../utils/storage.js";
+import {
+  isProjectInitialized,
+  readFilesFromProject,
+  saveProfile,
+} from "../utils/storage.js";
 
 export async function saveCommand(profile: string) {
   try {
@@ -67,6 +71,25 @@ export async function saveCommand(profile: string) {
       return;
     }
 
+    const configData = readFilesFromProject("config.json"); // already loaded above as `config`
+    if (!configData) {
+      console.log(chalk.red(`Configuration file not found.`));
+      return;
+    }
+    if (configData.profiles?.includes(profile)) {
+      const { confirm } = await inquirer.prompt([
+        {
+          type: "confirm",
+          name: "confirm",
+          message: `Profile '${profile}' already exists. Overwrite?`,
+          default: false,
+        },
+      ]);
+      if (!confirm) {
+        console.log(chalk.yellow("Aborted."));
+        return;
+      }
+    }
     await saveProfile(project, profile, env, fullPathOfProject);
 
     console.log(chalk.green(`✔ Saved profile '${profile}'`));

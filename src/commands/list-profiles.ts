@@ -4,6 +4,10 @@ import { readFilesFromProject } from "../utils/storage.js";
 export default function listProfilesCommand() {
   try {
     const configData = readFilesFromProject("config.json");
+    if (!configData) {
+      console.log(chalk.red(`Configuration file not found.`));
+      return;
+    }
 
     if (configData.profiles.length === 0) {
       console.log("No profiles found.");
