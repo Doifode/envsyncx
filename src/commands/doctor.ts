@@ -33,21 +33,19 @@ export async function doctorCommand() {
         chalk.red(`\nStale variables (not in ${sourceOfTruthFileName}):\n`),
       );
       stale.forEach((key) => console.log(chalk.yellow(`- ${key}`)));
-    }
-    // ask user if they want to remove the stale variables from .env
-    const { removeStale } = await inquirer.prompt([
-      {
-        type: "confirm",
-        name: "removeStale",
-        message:
-          "Do you want to remove the stale variables from .env? enter 'y' to remove, 'n' to keep",
-      },
-    ]);
-    console.log(removeStale);
-
-    if (removeStale) {
-      for (const key of stale) {
-        delete env[key];
+      // ask user if they want to remove the stale variables from .env
+      const { removeStale } = await inquirer.prompt([
+        {
+          type: "confirm",
+          name: "removeStale",
+          message:
+            "Do you want to remove the stale variables from .env? enter 'y' to remove, 'n' to keep",
+        },
+      ]);
+      if (removeStale) {
+        for (const key of stale) {
+          delete env[key];
+        }
       }
     }
     writeEnvFile(".env", env);
@@ -63,7 +61,7 @@ export async function doctorCommand() {
 
     console.log(
       chalk.red(
-        `Missing variables (in ${sourceOfTruthFileName} but not in .env):\n`,
+        `Missing variables or variable values (in ${sourceOfTruthFileName} but not in .env):\n`,
       ),
     );
 
