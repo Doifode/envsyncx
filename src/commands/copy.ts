@@ -1,5 +1,5 @@
 import chalk from "chalk";
-import { getProjectName, getProjectUniquePath } from "../utils/project.js";
+import { getProjectName, getProjectUniquePath, validateProfileName } from "../utils/project.js";
 import {
   loadProfile,
   readFilesFromProject,
@@ -19,6 +19,12 @@ export default async function copyProfile(
 
     if (!configData.profiles.includes(sourceProfile)) {
       console.log(chalk.red(`Profile '${sourceProfile}' not found.`));
+      return;
+    }
+
+    const nameError = validateProfileName(newProfile);
+    if (nameError) {
+      console.log(chalk.red(`\u274c Invalid profile name: ${nameError}`));
       return;
     }
 

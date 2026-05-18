@@ -1,6 +1,13 @@
 import fs from "fs";
 import dotenv from "dotenv";
 
+const SENSITIVE_PATTERN = /password|secret|token|key|api|auth|private|credential/i;
+
+/** Masks a value if its key name looks sensitive. Returns the value unchanged otherwise. */
+export function maskValue(key: string, value: string): string {
+  return SENSITIVE_PATTERN.test(key) ? "****" : value;
+}
+
 export function readEnvFile(filePath: string) {
   if (!fs.existsSync(filePath)) {
     throw new Error(`${filePath} not found`);

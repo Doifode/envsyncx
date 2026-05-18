@@ -115,7 +115,8 @@ export const checkFileExistsInProject = (filename: string): boolean => {
 };
 
 export const isProjectInitialized = (uniquePath: string): boolean => {
-  return fs.existsSync(path.join(BASE_DIR, uniquePath));
+  const project = getProjectName();
+  return fs.existsSync(path.join(BASE_DIR, uniquePath, project, "config.json"));
 };
 
 export function deleteFileFromProject(fileName: string) {

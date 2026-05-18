@@ -4,7 +4,7 @@ import inquirer from "inquirer";
 
 import { readEnvFile, writeEnvFile } from "../utils/env.js";
 
-import { getProjectName, getProjectUniquePath } from "../utils/project.js";
+import { getProjectName, getProjectUniquePath, validateProfileName } from "../utils/project.js";
 
 import {
   isProjectInitialized,
@@ -14,6 +14,12 @@ import {
 
 export async function saveCommand(profile: string) {
   try {
+    const validationError = validateProfileName(profile);
+    if (validationError) {
+      console.log(chalk.red(`\u274c Invalid profile name: ${validationError}`));
+      return;
+    }
+
     const isInitialized = isProjectInitialized(getProjectUniquePath());
     if (!isInitialized) {
       console.log(chalk.red("❌ Project not initialized"));

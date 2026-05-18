@@ -1,11 +1,12 @@
 import chalk from "chalk";
-import { readEnvFile } from "../utils/env.js";
+import { maskValue, readEnvFile } from "../utils/env.js";
 import { getProjectName, getProjectUniquePath } from "../utils/project.js";
 import { loadProfile, readFilesFromProject } from "../utils/storage.js";
 
 export default async function diffCommand(
   profile1: string,
-  profile2?: string,
+  profile2: string | undefined,
+  options: { reveal?: boolean } = {},
 ) {
   try {
     const project = getProjectName();
@@ -43,9 +44,7 @@ export default async function diffCommand(
     const allKeys = new Set([...Object.keys(a), ...Object.keys(b)]);
     let hasDiff = false;
 
-    console.log(
-      chalk.bold(`\nDiff: ${chalk.cyan(labelA)} vs ${chalk.cyan(labelB)}\n`),
-    );
+    console.log(chalk.bold(`\nDiff: ${chalk.cyan(labelA)} vs ${chalk.cyan(labelB)}\n`));
 
     for (const key of allKeys) {
       const valA = a[key];
@@ -55,17 +54,23 @@ export default async function diffCommand(
       hasDiff = true;
 
       if (valA === undefined) {
-        console.log(chalk.green(`+ ${key}=${valB}  [only in ${labelB}]`));
+        const display = options.reveal ? valB : maskValue(key, valB);
+        console.log(chalk.green(`+ ${key}=${display}  [only in ${labelB}]`));
       } else if (valB === undefined) {
-        console.log(chalk.red(`- ${key}=${valA}  [only in ${labelA}]`));
+        const display = options.reveal ? valA : maskValue(key, valA);
+        console.log(chalk.red(`- ${key}=${display}  [only in ${labelA}]`));
       } else {
-        console.log(chalk.red(`- ${key}=${valA}  [${labelA}]`));
-        console.log(chalk.green(`+ ${key}=${valB}  [${labelB}]`));
+        const dispA = options.reveal ? valA : maskValue(key, valA);
+        const dispB = options.reveal ? valB : maskValue(key, valB);
+        console.log(chalk.red(`- ${key}=${dispA}  [${labelA}]`));
+        console.log(chalk.green(`+ ${key}=${dispB}  [${labelB}]`));
       }
     }
 
     if (!hasDiff) {
-      console.log(chalk.green("✔ No differences found."));
+      console.log(chalk.green("\u2714 No differences found."));
+    } else if (!options.reveal) {
+      console.log(chalk.dim("\n  Tip: run with --reveal to show actual values."));
     }
   } catch (error: any) {
     console.log(chalk.red(error.message));

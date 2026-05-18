@@ -1,6 +1,6 @@
 import chalk from "chalk";
 import fs from "fs-extra";
-import { getProjectName, getProjectUniquePath } from "../utils/project.js";
+import { getProjectName, getProjectUniquePath, validateProfileName } from "../utils/project.js";
 import {
   getProfilePath,
   readFilesFromProject,
@@ -22,7 +22,11 @@ export default async function renameProfile(
       console.log(`Profile '${oldProfile}' not found.`);
       return;
     }
-
+    const nameError = validateProfileName(newProfile);
+    if (nameError) {
+      console.log(chalk.red(`\u274c Invalid profile name: ${nameError}`));
+      return;
+    }
     if (configData.profiles.includes(newProfile)) {
       console.log(`Profile '${newProfile}' already exists.`);
       return;

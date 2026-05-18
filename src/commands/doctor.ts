@@ -11,7 +11,14 @@ export async function doctorCommand() {
       return;
     }
     const sourceOfTruthFileName = configData.sourceOfTruth;
-    const env = readEnvFile(".env");
+
+    let env: Record<string, string> = {};
+    try {
+      env = readEnvFile(".env");
+    } catch {
+      console.log(chalk.yellow("\u26a0 .env not found. Treating current environment as empty.\n"));
+    }
+
     const example = readEnvFile(sourceOfTruthFileName);
 
     const missing: string[] = [];
