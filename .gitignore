@@ -37,7 +37,7 @@ yarn-error.log*
 dist/*
 dist-ssr/*
 dist*
-dist
+/dist
 
 # vercel
 .vercel
@@ -45,3 +45,4 @@ dist
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+/.envsyncx

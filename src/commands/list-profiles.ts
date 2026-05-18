@@ -12,9 +12,14 @@ export default function listProfilesCommand() {
     if (configData.profiles.length === 0) {
       console.log("No profiles found.");
     } else {
+      const active: string | undefined = configData.activeProfile;
       console.log("Profiles:");
       configData.profiles.forEach((profile: string) => {
-        console.log(chalk.green(`- ${profile}`));
+        if (profile === active) {
+          console.log(chalk.green(`* ${profile}`) + chalk.dim(" (active)"));
+        } else {
+          console.log(chalk.blue(`  ${profile}`));
+        }
       });
     }
   } catch (error) {

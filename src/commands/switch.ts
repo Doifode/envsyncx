@@ -5,7 +5,7 @@ import { writeEnvFile } from "../utils/env.js";
 
 import { getProjectName, getProjectUniquePath } from "../utils/project.js";
 
-import { loadProfile } from "../utils/storage.js";
+import { loadProfile, updateProjectFiles } from "../utils/storage.js";
 
 export async function switchCommand(profile: string) {
   try {
@@ -29,7 +29,14 @@ export async function switchCommand(profile: string) {
       console.log(chalk.green(`✔ Restored .env from profile '${profile}'`));
     } else {
       console.log(chalk.red("❌ Failed to create .env"));
+      return;
     }
+
+    // track the active profile in config
+    await updateProjectFiles(project, fullPathOfProject, "config.json", (data) => ({
+      ...data,
+      activeProfile: profile,
+    }));
   } catch (error: any) {
     console.log(chalk.red(error.message));
   }

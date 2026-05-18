@@ -3,13 +3,8 @@ import inquirer from "inquirer";
 
 import { readEnvFile } from "../utils/env.js";
 import { getProjectName, getProjectUniquePath } from "../utils/project.js";
-import {
-  loadProfile,
-  saveProfile,
-  updateProjectFiles,
-} from "../utils/storage.js";
-import { env } from "node:process";
-import { execSync } from "child_process";
+import { loadProfile, updateProjectFiles } from "../utils/storage.js";
+import { switchCommand } from "./switch.js";
 
 export async function syncCommand(profile: string) {
   try {
@@ -63,7 +58,7 @@ export async function syncCommand(profile: string) {
         }),
       );
 
-      execSync(`envsyncx switch ${profile}`, { stdio: "inherit" });
+      await switchCommand(profile);
 
       console.log(chalk.green("\n✔ Profile synced successfully"));
     } else {

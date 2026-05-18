@@ -1,7 +1,0 @@
-{
-  "APP_NAME": "esync",
-  "BASE_URL": "http://localhost:3000",
-  "NEW_VARIABLE": "http://localhost:3001",
-  "OLD_VARIABLE3": "http://loclahost:2304",
-  "OLD_VARIABLE4": ""
-}

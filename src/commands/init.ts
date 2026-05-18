@@ -1,10 +1,12 @@
-import { execSync } from "child_process";
+import fs from "fs";
+import path from "path";
 import inquirer from "inquirer";
 import { getProjectName, getProjectUniquePath } from "../utils/project.js";
 import {
   checkFileExistsInProject,
   createConfigFile,
 } from "../utils/storage.js";
+import { saveCommand } from "./save.js";
 
 const configureEnvsyncx = async () => {
   const value = await inquirer.prompt([
@@ -66,7 +68,21 @@ const configureEnvsyncx = async () => {
     await createConfigFile(profileData.project, fullPathOfProject, profileData);
     // run save command to create the first profile with the data from .env file, and if .env file doesn't exist, then use .env.example file, and if neither exists, then prompt user to enter values for the keys in .env.example file
     // how to run save command programmatically without calling the command in terminal? we can directly call the function that handles the save command and pass the necessary arguments to it, instead of executing it as a separate process. this way we can reuse the logic in the save command without duplicating code or relying on terminal commands. we just need to make sure to import the function from the save command file and call it with the appropriate parameters, such as the profile name and project name, along with any other required data.
-    execSync(`esync save ${[profileNamePrompt.profile]}`, { stdio: "inherit" });
+    await saveCommand(profileNamePrompt.profile);
+
+    // ensure .env is listed in .gitignore
+    const gitignorePath = path.join(process.cwd(), ".gitignore");
+    const envEntry = ".env";
+    if (fs.existsSync(gitignorePath)) {
+      const lines = fs.readFileSync(gitignorePath, "utf-8").split("\n").map((l) => l.trim());
+      if (!lines.includes(envEntry)) {
+        fs.appendFileSync(gitignorePath, `\n${envEntry}\n`);
+        console.log(`Added ${envEntry} to .gitignore`);
+      }
+    } else {
+      fs.writeFileSync(gitignorePath, `${envEntry}\n`);
+      console.log(`Created .gitignore with ${envEntry}`);
+    }
 
     console.log(
       "Initialization complete! Your first profile has been created.",

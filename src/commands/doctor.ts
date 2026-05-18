@@ -61,13 +61,34 @@ export async function doctorCommand() {
 
     console.log(
       chalk.red(
-        `Missing variables or variable values (in ${sourceOfTruthFileName} but not in .env):\n`,
+        `\nMissing variables (in ${sourceOfTruthFileName} but not in .env):\n`,
       ),
     );
+    missing.forEach((key) => console.log(chalk.yellow(`- ${key}`)));
 
-    missing.forEach((key) => {
-      console.log(chalk.yellow(`- ${key}`));
-    });
+    const { fillMissing } = await inquirer.prompt([
+      {
+        type: "confirm",
+        name: "fillMissing",
+        message: "Do you want to fill in the missing variables now?",
+        default: true,
+      },
+    ]);
+
+    if (fillMissing) {
+      for (const key of missing) {
+        const { value } = await inquirer.prompt([
+          {
+            type: "input",
+            name: "value",
+            message: `Enter value for ${key}:`,
+          },
+        ]);
+        env[key] = value;
+      }
+      writeEnvFile(".env", env);
+      console.log(chalk.green("\n✔ .env updated with missing variables."));
+    }
   } catch (error: any) {
     console.log(chalk.red(error.message));
   }
