@@ -1,11 +1,14 @@
 import chalk from "chalk";
 import fs from "fs";
 import path from "path";
+import os from "os";
 import inquirer from "inquirer";
 import { getProjectName, getProjectUniquePath, validateProfileName } from "../utils/project.js";
 import {
   checkFileExistsInProject,
   createConfigFile,
+  getGlobalBaseDir,
+  initStorageMeta,
   isProjectInitialized,
 } from "../utils/storage.js";
 import { saveCommand } from "./save.js";
@@ -36,6 +39,25 @@ const configureEnvsyncx = async () => {
     console.log(chalk.yellow("Aborted."));
     return;
   }
+
+  const { storageLocation } = await inquirer.prompt([{
+    type: "list",
+    name: "storageLocation",
+    message: "Where do you want to store your profiles?",
+    choices: [
+      {
+        name: `Current project folder  ${chalk.dim(`(.envsyncx/ inside this project)`)}`,
+        value: "local",
+      },
+      {
+        name: `Default global folder   ${chalk.dim(`(${getGlobalBaseDir()})`)}`,
+        value: "global",
+      },
+    ],
+    default: "local",
+  }]);
+
+  await initStorageMeta(storageLocation);
 
   const { filename } = await inquirer.prompt([{
     type: "input",

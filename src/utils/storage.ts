@@ -1,16 +1,41 @@
 import fs from "fs-extra";
+import os from "os";
 import path from "path";
 import { getProjectName, getProjectUniquePath } from "./project.js";
 import chalk from "chalk";
 
-const BASE_DIR = path.join(".envsyncx");
+const LOCAL_BASE_DIR = ".envsyncx";
+const META_FILE = path.join(LOCAL_BASE_DIR, ".meta.json");
+
+export function getGlobalBaseDir(): string {
+  return path.join(os.homedir(), ".envsyncx");
+}
+
+export function getBaseDir(): string {
+  try {
+    if (fs.existsSync(META_FILE)) {
+      const meta = fs.readJsonSync(META_FILE);
+      if (meta.storageType === "global") {
+        return getGlobalBaseDir();
+      }
+    }
+  } catch {
+    // fall through to default
+  }
+  return LOCAL_BASE_DIR;
+}
+
+export async function initStorageMeta(storageType: "local" | "global"): Promise<void> {
+  await fs.ensureDir(LOCAL_BASE_DIR);
+  await fs.writeJson(META_FILE, { storageType }, { spaces: 2 });
+}
 
 export function getProfilePath(
   project: string,
   profile: string,
   uniquePath: string,
 ) {
-  return path.join(BASE_DIR, uniquePath, project, `${profile}.json`);
+  return path.join(getBaseDir(), uniquePath, project, `${profile}.json`);
 }
 
 export const readFilesFromProject = (
@@ -29,13 +54,13 @@ export const readFilesFromProject = (
     return null;
   }
 
-  const configPath = path.join(BASE_DIR, uniquePath, project, jsonfile);
+  const configPath = path.join(getBaseDir(), uniquePath, project, jsonfile);
 
   return fs.readJsonSync(configPath);
 };
 
 const checkProfileExists = (project: string, uniquePath: string): boolean => {
-  const configPath = path.join(BASE_DIR, uniquePath, project, "config.json");
+  const configPath = path.join(getBaseDir(), uniquePath, project, "config.json");
   return fs.existsSync(configPath);
 };
 
@@ -46,7 +71,7 @@ export const updateProjectFiles = async (
   fileName: string,
   callback: (data: Record<string, any>) => Record<string, any> | null,
 ) => {
-  const configPath = path.join(BASE_DIR, uniquePath, project, fileName);
+  const configPath = path.join(getBaseDir(), uniquePath, project, fileName);
   const newValues = callback ? callback(await fs.readJson(configPath)) : {};
 
   const readConfig = readFilesFromProject(fileName);
@@ -91,7 +116,7 @@ export async function createConfigFile(
   uniquePath: string,
   data: Record<string, any>,
 ) {
-  const configPath = path.join(".envsyncx", uniquePath, project, "config.json");
+  const configPath = path.join(getBaseDir(), uniquePath, project, "config.json");
   await fs.ensureDir(path.dirname(configPath));
   await fs.writeJson(configPath, data, { spaces: 2 });
 }
@@ -116,7 +141,7 @@ export const checkFileExistsInProject = (filename: string): boolean => {
 
 export const isProjectInitialized = (uniquePath: string): boolean => {
   const project = getProjectName();
-  return fs.existsSync(path.join(BASE_DIR, uniquePath, project, "config.json"));
+  return fs.existsSync(path.join(getBaseDir(), uniquePath, project, "config.json"));
 };
 
 export function deleteFileFromProject(fileName: string) {
