@@ -3,6 +3,7 @@ import chalk from "chalk";
 import fs from "fs-extra";
 import path from "path";
 import { getProjectName, getProjectUniquePath } from "../utils/project.js";
+import { getBaseDir } from "../utils/storage.js";
 import { writeEnvFile } from "../utils/env.js";
 
 type HistoryEntry = {
@@ -13,7 +14,6 @@ type HistoryEntry = {
   snapshot: Record<string, string>;
 };
 
-const HISTORY_DIR = ".envsyncx";
 const MAX_HISTORY = 20;
 
 export default async function historyCommand(action?: string) {
@@ -33,7 +33,7 @@ export async function saveToHistory(action: string, envData: Record<string, stri
   try {
     const project = getProjectName();
     const uniquePath = getProjectUniquePath();
-    const historyPath = path.join(HISTORY_DIR, uniquePath, project, "history.json");
+    const historyPath = path.join(getBaseDir(), uniquePath, project, "history.json");
 
     await fs.ensureDir(path.dirname(historyPath));
 
@@ -68,7 +68,7 @@ async function listHistory() {
   try {
     const project = getProjectName();
     const uniquePath = getProjectUniquePath();
-    const historyPath = path.join(HISTORY_DIR, uniquePath, project, "history.json");
+    const historyPath = path.join(getBaseDir(), uniquePath, project, "history.json");
 
     if (!(await fs.pathExists(historyPath))) {
       console.log(chalk.yellow("No history found."));
@@ -108,7 +108,7 @@ async function rollbackHistory() {
   try {
     const project = getProjectName();
     const uniquePath = getProjectUniquePath();
-    const historyPath = path.join(HISTORY_DIR, uniquePath, project, "history.json");
+    const historyPath = path.join(getBaseDir(), uniquePath, project, "history.json");
 
     if (!(await fs.pathExists(historyPath))) {
       console.log(chalk.yellow("No history found."));
@@ -181,7 +181,7 @@ async function clearHistory() {
 
     const project = getProjectName();
     const uniquePath = getProjectUniquePath();
-    const historyPath = path.join(HISTORY_DIR, uniquePath, project, "history.json");
+    const historyPath = path.join(getBaseDir(), uniquePath, project, "history.json");
 
     if (await fs.pathExists(historyPath)) {
       await fs.remove(historyPath);

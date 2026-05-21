@@ -31,12 +31,8 @@ export async function saveCommand(profile: string) {
 
     const fullPathOfProject = getProjectUniquePath();
     const project = getProjectName();
-    const readJson = fs.readFileSync(
-      `.envsyncx/${fullPathOfProject}/${project}/config.json`,
-      "utf-8",
-    );
-
-    const config = JSON.parse(readJson);
+    const config = readFilesFromProject("config.json");
+    if (!config) return;
     const sourceOfTruthFileName = config.sourceOfTruth;
     let env: Record<string, string> = {};
 

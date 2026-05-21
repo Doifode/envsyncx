@@ -5,7 +5,6 @@ import { getProjectName, getProjectUniquePath } from "./project.js";
 import chalk from "chalk";
 
 const LOCAL_BASE_DIR = ".envsyncx";
-const META_FILE = path.join(LOCAL_BASE_DIR, ".meta.json");
 
 export function getGlobalBaseDir(): string {
   return path.join(os.homedir(), ".envsyncx");
@@ -13,11 +12,11 @@ export function getGlobalBaseDir(): string {
 
 export function getBaseDir(): string {
   try {
-    if (fs.existsSync(META_FILE)) {
-      const meta = fs.readJsonSync(META_FILE);
-      if (meta.storageType === "global") {
-        return getGlobalBaseDir();
-      }
+    const uniquePath = getProjectUniquePath();
+    const project = getProjectName();
+    const globalProjectPath = path.join(getGlobalBaseDir(), uniquePath, project);
+    if (fs.existsSync(globalProjectPath)) {
+      return getGlobalBaseDir();
     }
   } catch {
     // fall through to default
@@ -26,8 +25,14 @@ export function getBaseDir(): string {
 }
 
 export async function initStorageMeta(storageType: "local" | "global"): Promise<void> {
-  await fs.ensureDir(LOCAL_BASE_DIR);
-  await fs.writeJson(META_FILE, { storageType }, { spaces: 2 });
+  if (storageType === "global") {
+    // Pre-create the global project directory so getBaseDir() detects it immediately.
+    // No local files are created.
+    const uniquePath = getProjectUniquePath();
+    const project = getProjectName();
+    await fs.ensureDir(path.join(getGlobalBaseDir(), uniquePath, project));
+  }
+  // local: .envsyncx/ is created naturally by createConfigFile — nothing extra needed
 }
 
 export function getProfilePath(

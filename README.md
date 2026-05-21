@@ -1,6 +1,408 @@
 # envsyncx
 
-A local CLI tool for managing `.env` profiles per project. Save, switch, sync, diff, and audit environment variable sets without ever committing secrets.
+> A local CLI tool for managing `.env` profiles per project — save, switch, diff, audit, and protect environment variables without ever committing secrets.
+
+---
+
+## Why We Built This
+
+Every developer has dealt with the `.env` problem:
+
+- You juggle **multiple environments** (local, staging, production) but `.env` only holds one at a time.
+- Switching environments means **manually editing** files, copy-pasting values, or keeping a messy collection of `.env.local`, `.env.staging`, `.env.prod` files.
+- New teammates run `npm install` and stare at a blank `.env` with no idea what values to fill in.
+- You accidentally **commit secrets** because you forgot `.env` was untracked.
+- There's no history — one wrong edit and your working config is gone.
+
+**envsyncx** solves all of this. It gives your `.env` the same first-class treatment as your source code: named profiles, instant switching, diffs, history, rollback, and team-friendly tooling — entirely local, no cloud, no accounts.
+
+---
+
+## Installation
+
+```bash
+npm install -g envsyncx
+```
+
+The global binary is `esync`.
+
+---
+
+## Quick Start
+
+```bash
+# 1. Initialize envsyncx inside your project
+esync init
+
+# 2. Save your current .env as a named profile
+esync save development
+
+# 3. Switch to a different profile
+esync switch production
+
+# 4. List all saved profiles
+esync list
+```
+
+---
+
+## Highlights
+
+| Feature | Description |
+|---|---|
+| **Named profiles** | Save any number of `.env` snapshots per project |
+| **Instant switching** | One command restores a full environment |
+| **Local or global storage** | Store profiles inside the project or in `~/.envsyncx` (shared across machines) |
+| **Source-of-truth sync** | Keeps profiles aligned with `.env.example` as it evolves |
+| **Diff & compare** | Side-by-side diff between profiles or against live `.env` |
+| **History & rollback** | Every change is tracked; restore any past snapshot |
+| **Secret scanning** | Detects weak or placeholder secrets; AES-256 encryption built in |
+| **Cherry-pick & merge** | Pull selected variables from one or many profiles |
+| **Variable groups** | Organise related variables (db, api, auth) and apply them as a unit |
+| **Doctor** | Audits live `.env` for missing, stale, or suspicious values |
+| **Zero cloud** | Everything stays on your machine — no accounts, no sync servers |
+
+---
+
+## Storage Modes
+
+When you run `esync init` you choose where profiles are stored:
+
+```
+? Where do you want to store your profiles?
+❯ Current project folder  (.envsyncx/ inside this project)
+  Default global folder   (~/.envsyncx)
+```
+
+| Mode | Location | Best for |
+|---|---|---|
+| **Local** | `<project>/.envsyncx/` | Per-repo isolation; profiles travel with the repo |
+| **Global** | `~/.envsyncx/` | Shared machine-wide store; nothing added to the project folder |
+
+Each project is identified by a **16-character SHA-256 hash** of its path, so there are no naming collisions even across projects with the same name.
+
+```
+~/.envsyncx/
+  a3f8c21d94b07e15/       ← unique project ID (hash of project path)
+    my-app/
+      config.json
+      development.json
+      staging.json
+```
+
+---
+
+## Commands
+
+### `esync init`
+Initialises envsyncx for the current project.
+
+- Prompts for storage location (local project folder or global `~/.envsyncx`)
+- Prompts for the **source-of-truth** file (e.g. `.env.example`)
+- Prompts for a project name and an initial profile name
+- Automatically adds `.env` (and `.envsyncx/` for local mode) to `.gitignore`
+
+```bash
+esync init
+```
+
+---
+
+### `esync save <profile>`
+Snapshots the current `.env` into a named profile.
+
+- If `.env` does not exist, prompts for every key from the source-of-truth file and creates it
+- Warns before overwriting an existing profile
+
+```bash
+esync save development
+esync save staging
+```
+
+---
+
+### `esync switch <profile>`
+Restores `.env` from a saved profile and marks it as active.
+
+```bash
+esync switch production
+```
+
+---
+
+### `esync list`
+Lists all saved profiles. The active profile is marked with `*`.
+
+```bash
+esync list
+# * development  (active)
+#   staging
+#   production
+```
+
+---
+
+### `esync sync <profile>`
+Reconciles a saved profile against the source-of-truth file.
+
+- Prompts for values of **new keys** added since the profile was saved
+- Removes **stale keys** that no longer exist in the source-of-truth
+- Switches `.env` to the updated profile
+
+```bash
+esync sync development
+```
+
+---
+
+### `esync diff <profile1> [profile2]`
+Shows differences between two profiles, or between a profile and the current `.env`.
+
+```bash
+esync diff development production   # compare two profiles
+esync diff staging                  # compare profile vs live .env
+```
+
+---
+
+### `esync doctor`
+Audits the current `.env` against the source-of-truth file.
+
+- Lists **missing variables** and offers to fill them in
+- Lists **stale variables** and offers to remove them
+
+```bash
+esync doctor
+```
+
+---
+
+### `esync apply <profile>`
+Interactively select which variables from a profile to copy into `.env`.
+
+```bash
+esync apply production
+# checkbox list → select only the variables you need
+```
+
+---
+
+### `esync pick <profile> [--reveal]`
+Cherry-pick variables with a live diff preview.
+
+```bash
+esync pick production
+# ➕ NEW_VAR        (new in production)
+# ~  CHANGED_VAR   (different value)
+# =  SAME_VAR      (unchanged)
+```
+
+---
+
+### `esync merge <profile1> <profile2> [...]`
+Merge variables from multiple profiles into `.env`, with source tracking and conflict resolution.
+
+```bash
+esync merge dev staging
+```
+
+---
+
+### `esync compare-all [--reveal]`
+Matrix comparison table across all profiles. Select variables to apply.
+
+```bash
+esync compare-all
+esync compare-all --reveal   # unmask secret values
+```
+
+---
+
+### `esync search <keyword> [--reveal]`
+Search for a variable by name or value across all profiles.
+
+```bash
+esync search DATABASE
+```
+
+---
+
+### `esync extract`
+Extract a subset of variables from `.env` into a new named profile.
+
+```bash
+esync extract
+# multi-select variables → enter profile name → done
+```
+
+---
+
+### `esync wizard`
+Step-by-step interactive profile builder: choose a base, inherit variables, modify, and save.
+
+```bash
+esync wizard
+```
+
+---
+
+### `esync history [list|rollback|clear]`
+Automatic change tracking for `.env`.
+
+- Last **20 snapshots** are stored automatically on every switch/apply
+- Rollback to any past state with a single selection
+
+```bash
+esync history list
+esync history rollback
+esync history clear
+```
+
+---
+
+### `esync secrets <action>`
+Secret management for `.env`.
+
+| Action | Description |
+|---|---|
+| `scan` | Find weak, placeholder, or short secrets |
+| `encrypt` | AES-256-CBC encrypt selected variables (`enc:iv:data`) |
+| `decrypt` | Decrypt previously encrypted variables |
+| `generate-key` | Generate a strong random encryption key |
+
+```bash
+esync secrets scan
+esync secrets encrypt
+esync secrets generate-key
+```
+
+---
+
+### `esync groups <action> [args]`
+Organise variables into named groups (e.g. `database`, `api`, `auth`) and apply them as a unit.
+
+```bash
+esync groups create database
+esync groups add database DB_HOST DB_PORT DB_NAME
+esync groups apply database production
+esync groups list
+```
+
+---
+
+### `esync validate`
+Detect missing, empty, and suspicious variable values with interactive fixes.
+
+```bash
+esync validate
+```
+
+---
+
+### `esync batch-delete`
+Delete multiple profiles at once via checkbox selection.
+
+```bash
+esync batch-delete
+```
+
+---
+
+### `esync copy <source> <new>`
+Duplicate an existing profile under a new name.
+
+```bash
+esync copy development development-backup
+```
+
+---
+
+### `esync rename <old> <new>`
+Rename an existing profile.
+
+```bash
+esync rename dev development
+```
+
+---
+
+### `esync delete <profile>`
+Delete a single profile.
+
+```bash
+esync delete old-profile
+```
+
+---
+
+### `esync set-source <file>`
+Change the source-of-truth file and re-run doctor to check alignment.
+
+```bash
+esync set-source .env.schema
+```
+
+---
+
+### `esync desc`
+Interactively select a profile and display all its key-value pairs.
+
+```bash
+esync desc
+```
+
+---
+
+## How It Works
+
+```
+.envsyncx/
+  <16-char project hash>/
+    <project-name>/
+      config.json       ← metadata: source-of-truth, profile list, active profile, groups
+      development.json  ← profile snapshot
+      staging.json
+      production.json
+      history.json      ← last 20 .env snapshots
+```
+
+The `config.json` tracks:
+
+| Field | Description |
+|---|---|
+| `project` | Project name |
+| `fullPath` | SHA-256 hash of the project path (collision-safe unique ID) |
+| `sourceOfTruth` | Reference env file (e.g. `.env.example`) |
+| `profiles` | Array of saved profile names |
+| `activeProfile` | Last profile switched to |
+| `groups` | Named variable groups |
+
+---
+
+## .gitignore
+
+`esync init` manages `.gitignore` automatically:
+
+- **Local mode** — adds `.env` and `.envsyncx/`
+- **Global mode** — adds `.env` only (nothing else is written to the project)
+
+---
+
+## Tech Stack
+
+- [Node.js](https://nodejs.org) + TypeScript
+- [commander](https://github.com/tj/commander.js) — CLI framework
+- [@inquirer/prompts](https://github.com/SBoudrias/Inquirer.js) — interactive prompts
+- [chalk](https://github.com/chalk/chalk) — terminal colours
+- [dotenv](https://github.com/motdotla/dotenv) — `.env` parsing
+- [fs-extra](https://github.com/jprichardson/node-fs-extra) — file utilities
+
+---
+
+## License
+
+MIT
+
 
 ---
 

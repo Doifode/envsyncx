@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import fs from "fs";
 import path from "path";
 
@@ -14,7 +15,7 @@ export function getProjectName(): string {
 }
 
 export function getProjectUniquePath(): string {
-  return process.cwd().replace(/[\/\\:]/g, "_");
+  return crypto.createHash("sha256").update(process.cwd()).digest("hex").slice(0, 16);
 }
 
 /**

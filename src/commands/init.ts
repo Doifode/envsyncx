@@ -1,7 +1,7 @@
 import chalk from "chalk";
 import fs from "fs";
 import path from "path";
-import os from "os";
+import { select } from "@inquirer/prompts";
 import inquirer from "inquirer";
 import { getProjectName, getProjectUniquePath, validateProfileName } from "../utils/project.js";
 import {
@@ -40,22 +40,22 @@ const configureEnvsyncx = async () => {
     return;
   }
 
-  const { storageLocation } = await inquirer.prompt([{
-    type: "list",
-    name: "storageLocation",
+  const storageLocation = await select({
     message: "Where do you want to store your profiles?",
     choices: [
       {
-        name: `Current project folder  ${chalk.dim(`(.envsyncx/ inside this project)`)}`,
-        value: "local",
+        name: `Current project folder ${chalk.dim(`(.envsyncx/ inside this project)`)}`,
+        value: "local" as const,
+        description: `Profiles saved inside ${process.cwd()}\.envsyncx`,
       },
       {
-        name: `Default global folder   ${chalk.dim(`(${getGlobalBaseDir()})`)}`,
-        value: "global",
+        name: `Default global folder  ${chalk.dim(`(${getGlobalBaseDir()})`)}`,
+        value: "global" as const,
+        description: `Profiles saved in ${getGlobalBaseDir()} (shared across projects)`,
       },
     ],
     default: "local",
-  }]);
+  });
 
   await initStorageMeta(storageLocation);
 
@@ -101,9 +101,9 @@ const configureEnvsyncx = async () => {
   await createConfigFile(project, fullPathOfProject, profileData);
   await saveCommand(profile);
 
-  // ensure .env and .envsyncx are in .gitignore
+  // ensure .env (and .envsyncx for local storage) are in .gitignore
   const gitignorePath = path.join(process.cwd(), ".gitignore");
-  const entriesToIgnore = [".env", ".envsyncx"];
+  const entriesToIgnore = storageLocation === "local" ? [".env", ".envsyncx"] : [".env"];
   if (fs.existsSync(gitignorePath)) {
     const lines = fs.readFileSync(gitignorePath, "utf-8").split("\n").map((l) => l.trim());
     const toAdd = entriesToIgnore.filter((e) => !lines.includes(e));
