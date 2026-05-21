@@ -216,3 +216,263 @@ The `config.json` tracks:
 - [chalk](https://github.com/chalk/chalk) — terminal colours
 - [dotenv](https://github.com/motdotla/dotenv) — `.env` parsing
 - [fs-extra](https://github.com/jprichardson/node-fs-extra) — file utilities
+
+---
+
+## 🎯 Multi-Select Features
+
+### `esync apply <profile>`
+**Select specific variables from a profile to apply to .env**
+
+Interactively choose which variables to copy from a profile:
+```bash
+esync apply production
+# Shows checkbox list of all variables
+# Select only the ones you need
+# Press space to toggle, enter to confirm
+```
+
+### `esync merge <profile1> <profile2> [profile3...]`
+**Merge variables from multiple profiles**
+
+Combine variables from different profiles with source tracking:
+```bash
+esync merge dev staging production
+# Shows all variables from all profiles
+# Each variable labeled with source profile
+# Select which ones to merge into .env
+```
+
+### `esync pick <profile> [--reveal]`
+**Cherry-pick variables with conflict resolution**
+
+Interactive diff that shows what will change:
+```bash
+esync pick production
+# Shows:
+#   + NEW_VAR (new from production)
+#   ~ CHANGED_VAR (different value)
+#   = SAME_VAR (unchanged)
+# Multi-select which changes to apply
+```
+
+### `esync batch-delete`
+**Delete multiple profiles at once**
+
+```bash
+esync batch-delete
+# Shows all profiles with checkboxes
+# Select multiple to delete
+# Confirms before deletion
+```
+
+### `esync extract`
+**Extract variables from .env to a new profile**
+
+```bash
+esync extract
+# Multi-select variables from current .env
+# Creates new profile with only selected vars
+# Useful for sharing subset of config
+```
+
+### `esync compare-all [--reveal]`
+**Matrix view of all profiles**
+
+Visual comparison across all profiles:
+```bash
+esync compare-all
+# Shows table:
+# Variable    | dev     | staging | production
+# DB_HOST     | local   | stage-db| prod-db
+# API_KEY     | ****    | ****    | ****
+# 
+# Multi-select rows to copy to .env
+# If multiple profiles have a var, prompts which to use
+```
+
+### `esync search <keyword> [--reveal]`
+**Search variables across all profiles**
+
+```bash
+esync search DATABASE
+# Finds all variables containing "DATABASE"
+# Shows which profiles contain matches
+# Multi-select to view details
+```
+
+### `esync validate`
+**Validate .env and fix issues interactively**
+
+Detects:
+- Missing required variables (from source-of-truth)
+- Empty values
+- Suspicious patterns (placeholders in sensitive fields)
+
+```bash
+esync validate
+# Shows all issues with checkboxes
+# Multi-select which to fix
+# Prompts for corrections
+```
+
+---
+
+## 🔧 Advanced Features
+
+### `esync groups <action> [args]`
+**Manage variable groups**
+
+Organize variables by category (e.g., database, api, auth):
+
+```bash
+# Create a group
+esync groups create database
+
+# Add variables to a group (interactive or manual)
+esync groups add database DB_HOST DB_PORT DB_NAME
+
+# List all groups
+esync groups list
+
+# Apply only a specific group from a profile
+esync groups apply production database
+
+# Remove variables from a group
+esync groups remove database DB_HOST
+
+# Delete a group
+esync groups delete database
+```
+
+### `esync wizard`
+**Interactive profile creation wizard**
+
+Step-by-step profile builder:
+```bash
+esync wizard
+# 1. Enter profile name
+# 2. Choose base profile (optional)
+# 3. Select variables to inherit
+# 4. Add/modify/remove variables
+# 5. Review and save
+```
+
+### `esync history [action]`
+**View and manage .env change history**
+
+Automatically tracks changes with rollback capability:
+
+```bash
+# List history
+esync history
+esync history list
+
+# Rollback to a previous snapshot
+esync history rollback
+
+# Clear all history
+esync history clear
+```
+
+History shows:
+- Timestamp (relative time)
+- Action performed
+- Profile involved
+- Number of variables in snapshot
+
+### `esync secrets <action> [args]`
+**Scan and manage secrets**
+
+#### Scan for security issues
+```bash
+# Scan all profiles
+esync secrets scan
+
+# Scan specific profile
+esync secrets scan production
+```
+
+Detects:
+- Placeholder values in sensitive fields
+- Suspiciously short values
+- Empty sensitive variables
+
+#### Encrypt sensitive values
+```bash
+esync secrets encrypt production
+# Multi-select variables to encrypt
+# Enter encryption key (min 32 chars)
+# Values stored as: enc:iv:encrypted_data
+```
+
+#### Decrypt sensitive values
+```bash
+esync secrets decrypt production
+# Multi-select encrypted variables
+# Enter encryption key
+# Values restored to plain text
+```
+
+#### Generate encryption key
+```bash
+esync secrets generate-key
+# Generates a secure random key
+```
+
+---
+
+## Common Workflows
+
+### Setting up a new environment
+```bash
+esync init
+esync save dev
+esync wizard  # Create staging profile
+esync wizard  # Create production profile
+```
+
+### Safely updating production
+```bash
+esync pick production --reveal
+# Review changes before applying
+# Select only what you need
+```
+
+### Organizing by feature
+```bash
+esync groups create authentication
+esync groups add authentication JWT_SECRET AUTH_URL AUTH_PROVIDER
+esync groups apply production authentication
+```
+
+### Emergency rollback
+```bash
+esync history rollback
+# Select recent snapshot
+# Instant restore
+```
+
+### Merging configurations
+```bash
+esync merge dev-feature staging
+# Combine variables from both
+# Resolve conflicts interactively
+```
+
+---
+
+## Tips
+
+1. **Use groups** for related variables (database, api, auth, etc.)
+2. **Enable --interactive** on sync to preview changes before applying
+3. **Use pick** instead of switch when you want granular control
+4. **Run validate** regularly to catch configuration issues
+5. **Use secrets scan** before committing profiles
+6. **Keep encryption keys secure** - never commit them
+7. **Use history rollback** if something goes wrong
+
+---
+
+**Happy Environment Management! 🚀**
+

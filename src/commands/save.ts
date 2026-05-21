@@ -11,6 +11,7 @@ import {
   readFilesFromProject,
   saveProfile,
 } from "../utils/storage.js";
+import { saveToHistory } from "./history.js";
 
 export async function saveCommand(profile: string) {
   try {
@@ -97,6 +98,9 @@ export async function saveCommand(profile: string) {
       }
     }
     await saveProfile(project, profile, env, fullPathOfProject);
+
+    // Save to history
+    await saveToHistory(`Saved current .env to profile '${profile}'`, env, profile);
 
     console.log(chalk.green(`✔ Saved profile '${profile}'`));
   } catch (error: any) {

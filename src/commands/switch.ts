@@ -6,6 +6,7 @@ import { writeEnvFile } from "../utils/env.js";
 import { getProjectName, getProjectUniquePath } from "../utils/project.js";
 
 import { loadProfile, updateProjectFiles } from "../utils/storage.js";
+import { saveToHistory } from "./history.js";
 
 export async function switchCommand(profile: string) {
   try {
@@ -23,6 +24,9 @@ export async function switchCommand(profile: string) {
 
     // recreate .env
     writeEnvFile(".env", env);
+
+    // Save to history
+    await saveToHistory(`Switched to profile '${profile}'`, env, profile);
 
     // verify file exists
     if (fs.existsSync(".env")) {
