@@ -1,20 +1,36 @@
 {
   "name": "envsyncx",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Local CLI tool for managing .env profiles — save, switch, diff, audit and protect environment variables without committing secrets.",
+  "main": "./dist/index.js",
   "bin": {
     "esync": "./dist/index.js"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
+    "prepublishOnly": "npm run build",
     "dev": "ts-node src/index.ts"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "env",
+    "dotenv",
+    "environment",
+    "profiles",
+    "cli",
+    "secrets",
+    "devtools",
+    "environment-variables",
+    "env-manager"
+  ],
+  "author": "doifodeyash961@gmail.com",
+  "license": "MIT",
   "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
     "@inquirer/prompts": "^8.4.3",
     "chalk": "^5.6.2",
