@@ -4,7 +4,7 @@
   "description": "Local CLI tool for managing .env profiles — save, switch, diff, audit and protect environment variables without committing secrets.",
   "main": "./dist/index.js",
   "bin": {
-    "esync": "./dist/index.js"
+    "esync": "dist/index.js"
   },
   "files": [
     "dist"
